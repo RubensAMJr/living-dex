@@ -461,7 +461,7 @@
           <button type="button" id="markVisible">Mark all shown as caught</button>
           <button type="button" id="unmarkVisible">Mark all shown as missing</button>
           <hr>
-          <button type="button" id="resetBtn" class="danger">Reset to default (#1–721 caught)</button>
+          <button type="button" id="resetBtn" class="danger">Clear regular dex (nothing caught)</button>
         </div>
       </details>
       <input type="file" id="importFile" accept=".json,application/json" hidden>
@@ -561,17 +561,24 @@ const entries = DATA.map(([id, dex, name, region, note, b, s, sh, ib]) => {
 const byId = new Map(entries.map(e => [e.id, e]));
 
 // ---------- state ----------
-const defaults = {
+// Nothing is marked at the start. The two lists below were the old starting marks; a browser
+// that still holds exactly one of them has never been edited, so it starts empty as well.
+const defaults = { normal: () => new Set(), shiny: () => new Set() };
+const legacyDefaults = {
   normal: () => new Set(entries.filter(e => !e.region && e.dex <= 721).map(e => e.id)),
   shiny: () => new Set(SHINIES_OWNED),
 };
+const sameSet = (a, b) => a.size === b.size && [...a].every(x => b.has(x));
 let storageOk = true;
 function load(mode) {
   try {
     const raw = localStorage.getItem(KEYS[mode]);
     if (raw) {
       const arr = JSON.parse(raw);
-      if (Array.isArray(arr)) return new Set(arr.filter(id => byId.has(id)));
+      if (Array.isArray(arr)) {
+        const saved = new Set(arr.filter(id => byId.has(id)));
+        return sameSet(saved, legacyDefaults[mode]()) ? defaults[mode]() : saved;
+      }
     }
   } catch (e) { storageOk = false; }
   return defaults[mode]();
@@ -839,7 +846,7 @@ function applyMode(all = false) {
   shinyBtn.title = shiny ? "Back to the regular dex" : "Switch to the shiny dex";
   document.getElementById("title").innerHTML = shiny ? "Shiny <span>Living Dex</span>" : "Living Dex <span>Checklist</span>";
   document.title = shiny ? "Shiny Living Dex" : "Living Dex Checklist";
-  document.getElementById("resetBtn").textContent = shiny ? `Reset shiny dex (${SHINIES_OWNED.length} from PKHeX files)` : "Reset to default (#1–721 caught)";
+  document.getElementById("resetBtn").textContent = shiny ? "Clear shiny dex (nothing caught)" : "Clear regular dex (nothing caught)";
   caught = sets[mode];
   entries.forEach(paintCard);
   updateCounts();
@@ -1272,13 +1279,13 @@ document.getElementById("unmarkVisible").addEventListener("click", () => markSho
 document.getElementById("resetBtn").addEventListener("click", () => {
   menu.open = false;
   const msg = mode === "shiny"
-    ? `Reset the shiny dex? Only the ${SHINIES_OWNED.length} shinies from your PKHeX files stay caught.`
-    : "Reset the checklist? Everything from #1 to #721 becomes caught and everything else missing.";
+    ? "Clear the shiny dex? Every shiny becomes missing."
+    : "Clear the regular dex? Every Pokémon becomes missing.";
   if (!confirm(msg)) return;
   sets[mode] = defaults[mode]();
   caught = sets[mode];
   repaintAll();
-  toast(mode === "shiny" ? "Shiny dex reset" : "Checklist reset");
+  toast(mode === "shiny" ? "Shiny dex cleared" : "Regular dex cleared");
 });
 
 // ---------- header that tucks away while scrolling down (small screens) ----------

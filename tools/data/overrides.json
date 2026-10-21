@@ -1,0 +1,3 @@
+{
+  "_about": "Hand corrections applied after PokéAPI + Serebii. Per entry id: game -> list of [method, place, level] (empty list = not found in that game)."
+}

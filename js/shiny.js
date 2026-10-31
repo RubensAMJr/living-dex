@@ -101,8 +101,7 @@ function burst(fx, x, y, count, reach, sizeMin, sizeMax) {
 function playTransition(toShiny, swap) {
   if (animating) return;
   animating = true;
-  swap();
-  if (reducedMotion || !settings.shinyFx) { animating = false; return; }
+  if (reducedMotion || !settings.shinyFx) { swap(); animating = false; return; }
 
   shinyBtn.classList.remove("pop");
   void shinyBtn.offsetWidth;
@@ -120,13 +119,18 @@ function playTransition(toShiny, swap) {
     burst(fx, r.left + r.width / 2, r.top + r.height / 2, phone ? 6 : 8, phone ? 50 : 70, 12, 20);
   }
   document.body.appendChild(fx);
-  // The animations last up to ~0.85 s from their first frame on screen. Count from that frame, not from now: the
-  // first switch is slow to draw (all the other artwork shows for the first time), and a timer started here
-  // removed the layer before it was ever painted.
-  let done = false;
-  const finish = () => { if (done) return; done = true; fx.remove(); animating = false; };
-  requestAnimationFrame(() => requestAnimationFrame(() => setTimeout(finish, 900)));
-  setTimeout(finish, 4000); // backstop: hidden tabs don't draw frames
+  // Effect first, dex second. The first switch is slow to draw (all that artwork shows for the first time); when
+  // the dex changed in the same frame the effect was added, that heavy frame swallowed the effect. So the dex only
+  // changes once the effect's animations are running (they keep going while the new artwork is drawn), and the
+  // layer goes when they have finished.
+  const anims = fx.getAnimations({ subtree: true });
+  let swapped = false, done = false;
+  const change = () => { if (!swapped) { swapped = true; swap(); } };
+  const finish = () => { if (done) return; done = true; change(); fx.remove(); animating = false; };
+  Promise.all(anims.map(a => a.ready)).then(change, change);
+  setTimeout(change, 250);   // backstop: never keep the dex waiting long
+  Promise.all(anims.map(a => a.finished)).then(finish, finish);
+  setTimeout(finish, 4000);  // backstop: hidden tabs don't draw frames
 }
 
 shinyBtn.addEventListener("click", () => {

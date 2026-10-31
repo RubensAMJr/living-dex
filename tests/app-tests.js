@@ -122,26 +122,38 @@ test("selection mode: select two, mark caught, done", async () => {
 // ---------------------------------------------------------------- shiny dex
 test("✨ switch: the first switch shows its whole animation", async () => {
   await load();
-  // record the animations' state at the moment the effect layer is removed
-  const removed = [];
-  const original = W.Element.prototype.remove;
+  // record the effect's state when the dex changes (applyMode) and when the layer is removed
+  const removed = [], changed = [];
+  const original = W.Element.prototype.remove, applyMode = W.applyMode;
   W.Element.prototype.remove = function () {
     if (this.classList && this.classList.contains("fx"))
       removed.push(this.getAnimations({ subtree: true }).map(a => a.playState));
     return original.call(this);
   };
+  W.applyMode = function (...args) {
+    const fx = W.document.querySelector(".fx");
+    changed.push(fx ? fx.getAnimations({ subtree: true }).map(a => a.startTime !== null) : null);
+    return applyMode.apply(this, args);
+  };
+  // animations only run while the page is drawn (not in a hidden window or a background tab)
+  const drawn = await Promise.race([new Promise(r => W.requestAnimationFrame(() => r(true))), wait(300).then(() => false)]);
   try {
     await click(q("#shinyBtn"));
     assert(q(".fx"), "effect layer added");
-    eq($("mode"), "shiny", "mode");
+    await until(() => $("mode") === "shiny", "the shiny dex");
     eq(q("#title").textContent, "Shiny Living Dex", "title");
     await until(() => removed.length, "the effect layer to be removed", 6000);
-    assert(removed[0].length > 0 && removed[0].every(s => s === "finished"),
-           `all animations finished before removal (got ${removed[0].join(",")})`);
-  } finally { W.Element.prototype.remove = original; }
+    if (drawn) {
+      assert(changed[0] && changed[0].length > 0 && changed[0].every(Boolean),
+             "the effect was already running when the dex changed");
+      assert(removed[0].length > 0 && removed[0].every(s => s === "finished"),
+             `all animations finished before removal (got ${removed[0].join(",")})`);
+    }
+  } finally { W.Element.prototype.remove = original; W.applyMode = applyMode; }
   await until(() => !$("animating"), "the switch to settle");
   await click(q("#shinyBtn"));
-  eq($("mode"), "normal", "back to the regular dex");
+  await until(() => $("mode") === "normal", "back to the regular dex");
+  if (!drawn) return "animation order not checked: the page isn't being drawn (window hidden?)";
 });
 
 test("shiny note: only in the shiny dex, × hides it for good", async () => {
@@ -238,10 +250,11 @@ async function runAll() {
     list.appendChild(li);
     const started = performance.now();
     try {
-      await t.fn();
+      const note = await t.fn();   // a test may return a note, e.g. a part it couldn't check
       if (W && W.__errors.length) throw new Error(`script errors: ${W.__errors.join(" | ")}`);
       li.className = "ok";
-      results.push({ name: t.name, ok: true });
+      if (note) { li.insertAdjacentHTML("beforeend", "<small></small>"); li.lastChild.textContent = note; }
+      results.push({ name: t.name, ok: true, ...(note && { note }) });
     } catch (err) {
       li.className = "bad";
       li.insertAdjacentHTML("beforeend", `<small></small>`);

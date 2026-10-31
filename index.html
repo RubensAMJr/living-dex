@@ -605,6 +605,10 @@
   .gv-game:hover { background: var(--panel-hi); transform: translateY(-1px); }
   .gv-abbr { grid-row: span 2; display: grid; place-items: center; width: 44px; height: 44px; border-radius: 8px;
              background: var(--gc); color: var(--gi); font-weight: bold; font-size: 14px; box-shadow: inset 0 -3px 0 rgba(0,0,0,.25); }
+  /* the game's own icon (from the console's home menu) when there is one; the letters stay underneath as a fallback */
+  .gv-abbr.icon { position: relative; overflow: hidden; background: #222; box-shadow: 0 0 0 2px var(--gc); }
+  .gv-abbr.icon img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+  .gv-abbr.icon img.px { image-rendering: pixelated; }   /* the small DS / Game Boy icons stay crisp */
   .gv-name { font-weight: bold; }
   .gv-meta { font-size: 11px; color: var(--dim); }
   .gv-meta b { color: var(--gold); }
@@ -2053,6 +2057,34 @@ function loadLocations(id) {
   return locLoading[id];
 }
 
+// Each game's icon from Bulbagarden Archives (Category:Game icons): the DS/3DS/Switch home-menu icons, and the
+// 3DS Virtual Console ones for the Game Boy games. The GBA games (Ruby ... LeafGreen) never had one: letters stay.
+const ICON_BASE = "https://archives.bulbagarden.net/media/upload/";
+const GAME_ICON = {
+  red: "8/87/Red_VC_icon.png", blue: "9/90/Blue_VC_icon.png", yellow: "4/44/Yellow_VC_icon.png",
+  gold: "1/13/Gold_VC_icon.png", silver: "c/c1/Silver_VC_icon.png", crystal: "6/64/Crystal_VC_icon.png",
+  diamond: "5/5c/Diamond_icon.png", pearl: "f/fb/Pearl_icon.png", platinum: "4/49/Platinum_icon.png",
+  heartgold: "c/c9/HeartGold_Icon.png", soulsilver: "2/2e/SoulSilver_Icon.png",
+  black: "e/e4/Black_Icon.png", white: "4/4e/White_Icon.png", "black-2": "b/b0/Black_2_Icon.png", "white-2": "1/17/White_2_Icon.png",
+  x: "4/43/X_icon.png", y: "2/2f/Y_icon.png", "omega-ruby": "0/0f/Omega_Ruby_icon.png", "alpha-sapphire": "3/3b/Alpha_Sapphire_icon.png",
+  sun: "d/d5/Sun_icon.png", moon: "e/ed/Moon_icon.png", "ultra-sun": "b/b5/Ultra_Sun_icon.png", "ultra-moon": "e/e9/Ultra_Moon_icon.png",
+  "lets-go-pikachu": "thumb/c/c2/Let%27s_Go_Pikachu_Icon.jpg/120px-Let%27s_Go_Pikachu_Icon.jpg",
+  "lets-go-eevee": "thumb/8/83/Let%27s_Go_Eevee_Icon.jpg/120px-Let%27s_Go_Eevee_Icon.jpg",
+  sword: "thumb/a/ac/Sword_Icon.jpg/120px-Sword_Icon.jpg", shield: "thumb/f/f1/Shield_Icon.jpg/120px-Shield_Icon.jpg",
+  "brilliant-diamond": "thumb/2/2f/Brilliant_Diamond_Icon.jpg/120px-Brilliant_Diamond_Icon.jpg",
+  "shining-pearl": "thumb/3/3b/Shining_Pearl_Icon.jpg/120px-Shining_Pearl_Icon.jpg",
+  "legends-arceus": "thumb/7/70/Legends_Arceus_Icon.jpg/120px-Legends_Arceus_Icon.jpg",
+  scarlet: "thumb/f/f3/Scarlet_Icon.jpg/120px-Scarlet_Icon.jpg", violet: "thumb/5/53/Violet_Icon.jpg/120px-Violet_Icon.jpg",
+  "legends-za": "thumb/b/be/Legends_Z-A_Icon.jpg/120px-Legends_Z-A_Icon.jpg",
+};
+// the coloured letters, with the icon on top (it removes itself if it can't load)
+function gameBadge(id, abbr, ink) {
+  const icon = GAME_ICON[id];
+  return `<span class="gv-abbr${icon ? " icon" : ""}" style="--gi:${ink}">${esc(abbr)}` +
+    (icon ? `<img src="${ICON_BASE}${icon}" alt="" class="${icon.endsWith(".png") ? "px" : ""}" referrerpolicy="no-referrer" ` +
+            `onerror="this.parentNode.classList.remove('icon');this.remove()">` : "") + `</span>`;
+}
+
 function gvBar(crumbs) {
   return `<div class="gv-bar"><a class="gv-back" href="#">← Dex</a><nav class="gv-crumbs" aria-label="You are here">` +
     crumbs.map(([label, href], i) => i ? `<span>${href ? `<a href="${href}">${esc(label)}</a>` : esc(label)}</span>`
@@ -2066,7 +2098,7 @@ function renderPicker() {
     GAMES.map(([gen, list]) => `<section class="gv-gen"><h3>Generation ${gen}</h3><div class="gv-games">` +
       list.map(([id, abbr, name, color, ink]) => {
         const all = catchableIn(id), miss = all.filter(e => !caught.has(e.id)).length;
-        return `<a class="gv-game" href="#game/${id}" style="--gc:${color};--gi:${ink || "#fff"}"><span class="gv-abbr">${abbr}</span>` +
+        return `<a class="gv-game" href="#game/${id}" style="--gc:${color};--gi:${ink || "#fff"}">${gameBadge(id, abbr, ink || "#fff")}` +
                `<span class="gv-name">${esc(name)}</span><span class="gv-meta">${all.length} catchable · <b>${miss}</b> missing</span></a>`;
       }).join("") + `</div></section>`).join("");
 }
@@ -2136,7 +2168,7 @@ async function renderGame(id, placeSlug, pick) {
   const focusE = focus && byId.get(focus);
 
   gameView.innerHTML = gvBar([["Games", "#games"], [g.name, `#game/${id}`], [place.region], [place.name]]) +
-    `<div class="gv-head"><span class="gv-abbr" style="--gi:${g.ink}">${esc(g.abbr)}</span><div><h2>${esc(g.name)}</h2>` +
+    `<div class="gv-head">${gameBadge(id, g.abbr, g.ink)}<div><h2>${esc(g.name)}</h2>` +
     `<span class="gv-meta">${data.places.length} places · ${all.length} catchable · <b>${miss}</b> missing in your ${dexName()}</span></div>` +
     `<label class="toggle"><input type="checkbox" id="gvMissing"${gv.onlyMissing ? " checked" : ""}> Only missing</label></div>` +
     (focusE ? `<div class="gv-focus">Showing where <b>${esc(focusE.label)}</b> is: ${focusPlaces.length} place${focusPlaces.length === 1 ? "" : "s"} in ${esc(g.name)}` +

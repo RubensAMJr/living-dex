@@ -98,6 +98,7 @@ python tools/build.py            # rebuild index.html
 - **Fallback artwork** from [**Serebii.net**](https://www.serebii.net).
 - **Shiny artwork** in the official art style from [**sneasvile's imgbb gallery**](https://tonofdirt726.imgbb.com/albums). Thank you for making these! 💙
 - **Shiny fallback:** Pokémon HOME renders hosted on Bulbapedia.
+- **Game icons** (DS, 3DS, Switch and 3DS Virtual Console home-menu icons) from the [Bulbagarden Archives' game icons](https://archives.bulbagarden.net/wiki/Category:Game_icons).
 
 All images are linked from those sites at view time. None are stored in this repository; your browser keeps its own copy for speed.
 

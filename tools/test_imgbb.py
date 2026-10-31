@@ -32,7 +32,7 @@ FAILED = []
 
 
 def shiny_urls():
-    page = (ROOT / "index.html").read_text(encoding="utf-8")
+    page = (ROOT / "data" / "pokemon.js").read_text(encoding="utf-8")
     rows = json.loads(re.search(r"const DATA = (\[.*?\]);\r?\n", page, re.S).group(1))
     return [f"https://i.ibb.co/{row[8]}/{row[6]}.png" for row in rows if row[8]]
 

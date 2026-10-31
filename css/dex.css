@@ -1,0 +1,113 @@
+/* The dex: section heads, the card grid, cards, paint fill, the shiny-art note. */
+
+main { padding: 16px 0 40px; }
+section { margin-bottom: 22px; }
+section[hidden] { display: none; }
+.sec-head {
+  display: flex; align-items: baseline; justify-content: space-between; gap: 10px;
+  background: var(--accent); border: 1px solid var(--edge); border-radius: 3px;
+  padding: 7px 12px; margin-bottom: 10px; font-weight: bold;
+}
+/* shiny mode only, until dismissed: why some shiny art can be slow (floats at the bottom of the screen) */
+.shiny-note { position: fixed; z-index: 30; left: 50%; transform: translateX(-50%);
+              bottom: calc(14px + env(safe-area-inset-bottom)); width: max-content; max-width: min(620px, calc(100% - 2 * var(--gutter)));
+              display: flex; align-items: center; gap: 10px; padding: 8px 8px 8px 14px; border-radius: 8px;
+              background: #3b3415; border: 1px solid #ffd54a; color: #ffe9a8; font-size: 12px; line-height: 1.4;
+              box-shadow: 0 6px 22px rgba(0,0,0,.55); animation: note-in .35s ease-out; }
+@keyframes note-in { from { opacity: 0; transform: translate(-50%, 12px); } }
+.shiny-note[hidden], body.in-games .shiny-note, body:has(.selbar:not([hidden])) .shiny-note { display: none; }
+.shiny-note span { flex: 1; }
+.shiny-note button { flex: none; width: 24px; height: 24px; display: grid; place-items: center; padding: 0; border: 0; border-radius: 50%;
+                     background: transparent; color: #ffe9a8; font-size: 18px; line-height: 1; cursor: pointer; }
+.shiny-note button:hover { background: rgba(255,213,74,.25); color: #fff; }
+.sec-head h2 { margin: 0; font-size: 14px; }
+.sec-head h2 small { font-weight: normal; color: var(--accent-soft); margin-left: 6px; font-size: 12px; }
+.sec-head .count { font-size: 12px; white-space: nowrap; }
+
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(116px, 1fr)); gap: 8px; }
+.card {
+  position: relative; display: flex; flex-direction: column; align-items: center;
+  padding: 8px 6px 20px; min-height: 172px;
+  background: var(--panel); border: 1px solid var(--edge); border-radius: 6px;
+  cursor: pointer; text-align: center; user-select: none;
+  transition: background .12s, border-color .25s, box-shadow .25s;
+  /* off-screen cards skip rendering, so a mode switch only animates what you can see */
+  content-visibility: auto; contain-intrinsic-size: auto 174px;
+}
+.card[hidden] { display: none; }
+.card:focus-visible { outline: 2px solid var(--accent-hi); outline-offset: 2px; }
+/* Each card holds both artworks stacked; switching dex is just a crossfade (no image loading) */
+.card .art { position: relative; width: 96px; height: 96px; }
+.card .v { position: absolute; inset: 0; display: grid; place-items: center; transition: opacity .3s ease; }
+.card .v.s, .card.t-shiny .v.n { opacity: 0; }
+.card.t-shiny .v.s { opacity: 1; }
+.card img { width: 96px; height: 96px; object-fit: contain; transition: filter .2s, opacity .2s; }
+.card .v.noimg img { display: none; }
+.card .v.noimg::after { content: attr(data-ph); color: var(--dim); font-size: 22px; font-weight: bold; }
+.card .num { color: var(--dim); font-size: 11px; margin-top: 4px; }
+.card .name { font-weight: bold; font-size: 12px; line-height: 1.3; margin-top: 2px; word-break: break-word; }
+.card .form { font-size: 11px; color: var(--accent-hi); margin-top: 2px; }
+/* the tick is drawn with CSS (no SVG per card: 2,000+ fewer elements) */
+.card .tick {
+  position: absolute; top: 6px; right: 6px; width: 20px; height: 20px; border-radius: 50%;
+  border: 2px solid #5f5f5f; display: grid; place-items: center;
+  transition: background .25s, border-color .25s, opacity .15s, transform .15s;
+}
+.card .tick::after {
+  content: ""; width: 5px; height: 9px; margin-top: -2px;
+  border: solid #fff; border-width: 0 2px 2px 0; transform: rotate(45deg);
+  opacity: 0; transition: opacity .25s;
+}
+
+/* cn = caught in the regular dex, cs = caught in the shiny dex; the card's t-shiny class picks which counts */
+.card:not(.cn) .v.n img { filter: grayscale(1); opacity: .4; }
+/* in the shiny dex keep a hint of colour on missing ones, the colour is the point */
+.card:not(.cs) .v.s img { filter: saturate(.55) brightness(.85); opacity: .5; }
+.card:not(.t-shiny):not(.cn) .name, .card.t-shiny:not(.cs) .name { color: var(--muted); }
+.card.cn:not(.t-shiny), .card.cs.t-shiny { border-color: var(--accent); box-shadow: inset 0 -3px 0 var(--accent); }
+.card.cn:not(.t-shiny) .tick, .card.cs.t-shiny .tick { background: var(--accent); border-color: var(--accent); }
+.card.cn:not(.t-shiny) .tick::after, .card.cs.t-shiny .tick::after { opacity: 1; }
+
+/* paint-bucket fill: a full-colour copy of the art grows (or shrinks) as a circle from the click */
+.card .v img.paint {
+  position: absolute; inset: 0; margin: auto; pointer-events: none; will-change: clip-path;
+  filter: none !important; opacity: 1 !important; transition: none !important;
+}
+.card.pop .tick { animation: tick-pop .35s cubic-bezier(.3,1.6,.5,1); }
+@keyframes tick-pop { 40% { transform: scale(1.35); } }
+
+/* hover effects only where there is a real mouse; on touch screens they would stay "stuck" after a tap */
+@media (hover: hover) {
+  .seg button:hover:not([aria-pressed="true"]) { background: var(--panel-hi); color: #fff; }
+  .shiny-btn:hover { background: var(--panel-hi); }
+  .select-btn:hover:not([aria-pressed="true"]) { background: var(--panel-hi); color: #fff; }
+  .selbar button:hover:not(:disabled):not(.primary) { background: var(--panel-hi); }
+  .shiny-btn[aria-pressed="true"]:hover { background: var(--accent); }
+  .shiny-btn:hover svg { transform: rotate(-12deg) scale(1.1); }
+  .menu > summary:hover { background: var(--panel-hi); color: #fff; }
+  .menu .items button:hover, .menu .items .opt:hover { background: var(--panel-hi); }
+  .gen-chip:hover { background: var(--panel-hi); color: #fff; }
+  .card:hover { background: var(--panel-hi); }
+  .card:not(.cn):hover .v.n img { opacity: .7; }
+}
+/* touch screens: a brief press feedback instead */
+@media (hover: none) {
+  .card:active { background: var(--panel-hi); }
+  .search kbd { display: none; }
+  .menu .items button, .menu .items .opt { padding: 11px 12px; }
+}
+
+.empty { display: none; text-align: center; color: var(--muted); padding: 60px 16px; }
+.empty.show { display: block; }
+
+footer { color: var(--dim); font-size: 11px; text-align: center; padding: 0 16px calc(28px + env(safe-area-inset-bottom)); line-height: 1.6; }
+footer a { color: var(--muted); }
+
+.toast {
+  position: fixed; left: 50%; bottom: calc(20px + env(safe-area-inset-bottom)); transform: translateX(-50%) translateY(20px);
+  max-width: calc(100vw - 32px); text-align: center;
+  background: var(--deep); border: 1px solid var(--accent); color: #fff;
+  padding: 9px 16px; border-radius: 6px; opacity: 0; pointer-events: none;
+  transition: opacity .2s, transform .2s; z-index: 40;
+}
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }

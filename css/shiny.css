@@ -1,0 +1,32 @@
+/* The ✨ switch: sweep and sparkle burst. */
+
+.fx { position: fixed; inset: 0; z-index: 100; pointer-events: none; overflow: hidden; }
+.fx .flash {
+  position: absolute; left: 50%; top: 50%; width: 40vmax; height: 40vmax; margin: -20vmax 0 0 -20vmax;
+  border-radius: 50%; will-change: transform, opacity;
+  background: radial-gradient(circle, rgba(255,255,255,.5), rgba(var(--glow), .28) 40%, transparent 70%);
+  animation: fx-flash .5s ease-out forwards;
+}
+@keyframes fx-flash { from { transform: scale(.15); opacity: 1; } to { transform: scale(1.7); opacity: 0; } }
+.fx .sweep {
+  position: absolute; top: -20%; bottom: -20%; left: 0; width: 45vw; will-change: transform;
+  background: linear-gradient(100deg, transparent 10%, rgba(var(--glow), .16) 36%, rgba(255,255,255,.3) 50%, rgba(255,236,170,.16) 64%, transparent 90%);
+  transform: translateX(-60vw) skewX(-14deg);
+  animation: fx-sweep .62s cubic-bezier(.3,.6,.25,1) forwards;
+}
+@keyframes fx-sweep { to { transform: translateX(130vw) skewX(-14deg); } }
+/* the ✨ is pre-drawn into an image (--spark); laying out emoji text on every click costs ~50 ms */
+.fx .spark {
+  position: absolute; left: var(--x); top: var(--y); width: var(--size); height: var(--size);
+  background: var(--spark) center / contain no-repeat;
+  transform: translate(-50%, -50%) scale(.2); opacity: 0; will-change: transform, opacity;
+  animation: fx-spark var(--dur) cubic-bezier(.15,.75,.3,1) var(--delay) forwards;
+}
+@keyframes fx-spark {
+  0%   { transform: translate(-50%, -50%) scale(.2) rotate(0deg); opacity: 0; }
+  12%  { opacity: 1; }
+  70%  { opacity: 1; }
+  100% { transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) scale(var(--s)) rotate(var(--rot)); opacity: 0; }
+}
+.shiny-btn.pop svg { animation: fx-pop .45s cubic-bezier(.3,1.6,.5,1); }
+@keyframes fx-pop { 0% { transform: scale(1); } 40% { transform: scale(1.45) rotate(-20deg); } 100% { transform: scale(1) rotate(0deg); } }

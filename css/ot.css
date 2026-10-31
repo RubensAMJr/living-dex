@@ -1,0 +1,14 @@
+/* OT (original trainer) marks: Ash's cap at the card's top-left. */
+
+.ot-btn {
+  display: none; position: absolute; top: 4px; left: 4px; z-index: 2; width: 24px; height: 24px; padding: 0;
+  border: 0; border-radius: 4px; cursor: pointer; background: url("../icons/ot-cap.png") center / contain no-repeat;
+  filter: grayscale(1) brightness(.7); opacity: .5; transition: filter .2s, opacity .2s, transform .15s;
+}
+body.show-ot .ot-btn { display: block; }
+.card.on:not(.t-shiny) .ot-btn, .card.os.t-shiny .ot-btn { filter: none; opacity: 1; }
+.ot-btn.pop { animation: ot-pop .35s cubic-bezier(.3,1.6,.5,1); }
+@keyframes ot-pop { 40% { transform: scale(1.4) rotate(-12deg); } }
+.ot-btn:focus-visible { outline: 2px solid var(--accent-hi); outline-offset: 1px; }
+body:not(.show-ot) .ot-only { display: none; }
+@media (hover: hover) { .ot-btn:hover { opacity: 1; transform: scale(1.12); } }

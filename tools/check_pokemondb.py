@@ -1,4 +1,4 @@
-"""Accuracy check: compares info-data.js with the "Where to find" tables on pokemondb.net.
+"""Accuracy check: compares data/info-data.js with the "Where to find" tables on pokemondb.net.
 
 For every species (regional forms are skipped, pokemondb lists them on the base page) and every game it reports
 where the two disagree:  found / evolve / miss.  Pages are cached in tools/cache/pdb/.
@@ -17,7 +17,7 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 def main(report):
-    data = (ROOT / "info-data.js").read_text(encoding="utf-8")
+    data = (ROOT / "data" / "info-data.js").read_text(encoding="utf-8")
     games = json.loads(re.search(r"window.DEX_GAMES = (.*?);\n", data).group(1))
     info = json.loads(re.search(r"window.DEX_INFO = (.*?);\n", data).group(1))
     names = {r["pokemon_species_id"]: r["name"] for r in csv.DictReader(open(ROOT / "tools/data/species_names_en.csv", encoding="utf-8"))

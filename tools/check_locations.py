@@ -11,12 +11,12 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 def main(report):
-    data = (ROOT / "info-data.js").read_text(encoding="utf-8")
+    data = (ROOT / "data" / "info-data.js").read_text(encoding="utf-8")
     games = json.loads(re.search(r"window.DEX_GAMES = (.*?);\n", data).group(1))
     info = json.loads(re.search(r"window.DEX_INFO = (.*?);\n", data).group(1))
     lines, summary = [], []
     for gi, game in enumerate(games):
-        path = ROOT / "locations" / f"{game}.js"
+        path = ROOT / "data" / "locations" / f"{game}.js"
         if not path.exists():
             summary.append(f"{game:18} NO FILE")
             continue

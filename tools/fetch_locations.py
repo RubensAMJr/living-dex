@@ -7,7 +7,7 @@ generation and sub-area, the encounter methods (walking, surfing, fishing, gifts
 time of day, season, rarity and levels. What those pages miss (Legends: Z-A entirely, Friend Safari, Max Raids, the
 Scarlet/Violet DLC, ...) comes from the per-Pokémon finds that tools/fetch_info.py saves in tools/cache/finds.json.
 
-Output: locations/<game>.js, one per game, loaded by the page only when that game is opened:
+Output: data/locations/<game>.js, one per game, loaded by the page only when that game is opened:
   window.DEX_LOC["<game>"] = {
     "regions": [ [region name, [ [location name, [ [area, method, [ [entry id, levels, rarity, times, note], ... ]], ...]], ...]], ...]
   }
@@ -28,7 +28,7 @@ HISUIAN = set(REGION_FORMS["Hisuian"][2])
 # games where those islands only need another game's save data, not an event
 SAVE_BONUS_GAMES = {"brilliant-diamond", "shining-pearl", "omega-ruby", "alpha-sapphire"}
 CACHE = ROOT / "tools" / "cache" / "pdbloc"
-OUT = ROOT / "locations"
+OUT = ROOT / "data" / "locations"
 UA = "living-dex-checklist (personal project; github.com/RubensAMJr/living-dex)"
 
 # pokemondb's game codes (cell-loc-game-XX) -> our game ids

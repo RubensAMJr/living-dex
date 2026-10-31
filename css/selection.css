@@ -1,0 +1,112 @@
+/* Selection mode: select button, drag box, ticks and the bottom bar. */
+
+/* only selected Pokémon show the check circle; unselected ones hide it */
+body.selecting .card .tick { opacity: 0; transform: scale(.6); }
+body.selecting .card.sel .tick { opacity: 1; transform: none; background: var(--accent); border-color: var(--accent); }
+body.selecting .card.sel .tick::after { opacity: 1; }
+body.selecting .card.sel { outline: 2px solid var(--accent-hi); outline-offset: -2px; background: var(--panel-hi); }
+body.dragging, body.dragging * { user-select: none !important; cursor: crosshair !important; }
+.card img { -webkit-user-drag: none; }
+.marquee {
+  position: absolute; z-index: 15; pointer-events: none; display: none;
+  border: 1px solid var(--accent-hi); border-radius: 2px;
+  background: color-mix(in srgb, var(--accent-hi) 16%, transparent);
+}
+.marquee.on { display: block; }
+.selbar {
+  position: fixed; left: 50%; bottom: calc(16px + env(safe-area-inset-bottom)); z-index: 35;
+  transform: translateX(-50%); max-width: calc(100vw - 24px);
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 8px;
+  padding: 8px 10px; border-radius: 10px;
+  background: var(--deep); border: 1px solid var(--accent); box-shadow: 0 8px 24px rgba(0,0,0,.55);
+  animation: selbar-in .2s ease-out;
+}
+.selbar[hidden] { display: none; }
+@keyframes selbar-in { from { opacity: 0; transform: translate(-50%, 12px); } }
+.selbar .count { font-weight: bold; padding: 0 6px; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.selbar button {
+  border: 1px solid #555; background: var(--panel); border-radius: 6px; padding: 7px 12px; cursor: pointer; white-space: nowrap;
+}
+.selbar button.primary { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: bold; }
+.selbar button:disabled { opacity: .45; cursor: default; }
+.selbar button:focus-visible { outline: 2px solid var(--accent-hi); outline-offset: 2px; }
+body.selecting .toast { bottom: calc(84px + env(safe-area-inset-bottom)); }
+body.selecting main { padding-bottom: 110px; }
+
+.menu { position: relative; }
+.menu > summary {
+  list-style: none; cursor: pointer; display: grid; place-items: center; width: 36px; height: 33px;
+  background: var(--panel); border: 1px solid #555; border-radius: 6px; color: var(--muted);
+}
+.menu > summary svg { width: 18px; height: 18px; fill: currentColor; }
+.menu > summary:focus-visible { outline: 2px solid var(--accent-hi); outline-offset: 2px; }
+.menu > summary::-webkit-details-marker { display: none; }
+.menu[open] > summary { background: var(--panel-hi); color: #fff; }
+.menu .items {
+  position: absolute; right: 0; top: calc(100% + 6px); min-width: 250px;
+  max-height: calc(100vh - 120px); overflow-y: auto; overscroll-behavior: contain;
+  background: var(--panel); border: 1px solid #5a5a5a; border-radius: 8px; padding: 6px;
+  box-shadow: 0 8px 24px rgba(0,0,0,.5); z-index: 30;
+}
+.menu .items button {
+  display: block; width: 100%; text-align: left; border: 0; background: none;
+  padding: 8px 10px; border-radius: 5px; cursor: pointer;
+}
+.menu .items hr { border: 0; border-top: 1px solid #555; margin: 6px 4px; }
+.menu .items .danger { color: #ff9b9b; }
+.menu .items .head { padding: 6px 10px 2px; font-size: 11px; color: var(--dim); text-transform: uppercase; letter-spacing: .5px; }
+.menu .items .opt {
+  display: flex; align-items: center; justify-content: space-between; gap: 14px;
+  padding: 8px 10px; border-radius: 5px; cursor: pointer; user-select: none;
+}
+/* on/off switch */
+.menu .items .opt input {
+  appearance: none; -webkit-appearance: none; flex: 0 0 auto; margin: 0; cursor: pointer;
+  width: 34px; height: 20px; border-radius: 999px; background: #5a5a5a; position: relative;
+  transition: background .2s;
+}
+.menu .items .opt input::after {
+  content: ""; position: absolute; top: 3px; left: 3px; width: 14px; height: 14px; border-radius: 50%;
+  background: #fff; transition: transform .2s cubic-bezier(.3,1.4,.5,1);
+}
+.menu .items .opt input:checked { background: var(--accent); }
+.menu .items .opt input:checked::after { transform: translateX(14px); }
+.menu .items .opt input:focus-visible { outline: 2px solid var(--accent-hi); outline-offset: 2px; }
+/* colour fill switched off: filter buttons just swap colour */
+body.no-paint .seg button::before, body.no-paint .gen-chip::before { transition: none !important; }
+
+.gens { display: flex; flex-wrap: wrap; gap: 6px; padding-bottom: 12px; }
+.gen-chip {
+  flex: 0 0 auto; border: 1px solid #555; background: var(--panel); border-radius: 999px;
+  padding: 5px 12px; cursor: pointer; color: var(--muted); white-space: nowrap;
+}
+.gen-chip small { color: var(--dim); margin-left: 4px; font-size: 11px; }
+.gen-chip.done small { color: var(--accent-hi); }
+.gen-chip[aria-pressed="true"] { border-color: var(--accent); color: #fff; }
+.gen-chip[aria-pressed="true"] small { color: var(--accent-soft); }
+.gen-chip[hidden], .chip-sep[hidden] { display: none; }
+
+/* paint-bucket fill for the selected filter: the colour spreads from where you clicked
+   (--x/--y, set on click) and drains away from the button you left */
+.seg button, .gen-chip { position: relative; isolation: isolate; overflow: hidden; transition: color .25s, border-color .25s; }
+.seg button::before, .gen-chip::before {
+  content: ""; position: absolute; inset: 0; z-index: -1; background: var(--accent);
+  clip-path: circle(0px at var(--x, 50%) var(--y, 50%));
+  transition: clip-path .32s cubic-bezier(.55,0,.8,.45);
+}
+.seg button[aria-pressed="true"]::before, .gen-chip[aria-pressed="true"]::before {
+  clip-path: circle(var(--reach, 160px) at var(--x, 50%) var(--y, 50%));
+  transition: clip-path .42s cubic-bezier(.22,.7,.3,1);
+}
+@media (prefers-reduced-motion: reduce) {
+  .seg button::before, .gen-chip::before { transition: none !important; }
+  header { transition: none; }
+}
+.chip-sep { flex: 0 0 1px; align-self: stretch; background: #555; margin: 3px 4px; }
+
+.divider { display: flex; align-items: center; gap: 12px; margin: 34px 0 16px; color: var(--muted); font-weight: bold; letter-spacing: .5px; text-transform: uppercase; font-size: 12px; }
+.divider::before, .divider::after { content: ""; flex: 1; height: 2px; background: var(--accent); opacity: .6; }
+.divider[hidden] { display: none; }
+
+.warn { display: none; background: #6b4a12; color: #ffe9c2; padding: 8px 16px; font-size: 12px; text-align: center; }
+.warn.show { display: block; }

@@ -1,4 +1,4 @@
-"""Build info-data.js: types and where-to-find data for every checklist entry (species + regional forms).
+"""Build data/info-data.js: types and where-to-find data for every checklist entry (species + regional forms).
 
 Usage:  python tools/fetch_info.py            (all 1,082 entries)
         python tools/fetch_info.py --refresh  (ignore the Serebii page cache)
@@ -31,7 +31,7 @@ import urllib.request
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-OUT = ROOT / "info-data.js"
+OUT = ROOT / "data" / "info-data.js"
 CACHE = ROOT / "tools" / "cache"
 OVERRIDES = ROOT / "tools" / "data" / "overrides.json"
 NAMES_CSV = ROOT / "tools" / "data" / "species_names_en.csv"

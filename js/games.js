@@ -44,12 +44,25 @@ const GAME_ICON = {
   scarlet: "thumb/f/f3/Scarlet_Icon.jpg/120px-Scarlet_Icon.jpg", violet: "thumb/5/53/Violet_Icon.jpg/120px-Violet_Icon.jpg",
   "legends-za": "thumb/b/be/Legends_Z-A_Icon.jpg/120px-Legends_Z-A_Icon.jpg",
 };
-// the coloured letters, with the icon on top (it removes itself if it can't load)
+// the coloured letters, with the icon on top (see iconFailed below if it can't load)
 function gameBadge(id, abbr, ink) {
   const icon = GAME_ICON[id];
   return `<span class="gv-abbr${icon ? " icon" : ""}" style="--gi:${ink}">${esc(abbr)}` +
-    (icon ? `<img src="${iconUrl(icon)}" alt="" class="${icon.endsWith(".png") && !icon.startsWith("icons/") ? "px" : ""}" referrerpolicy="no-referrer" ` +
-            `onerror="this.parentNode.classList.remove('icon');this.remove()">` : "") + `</span>`;
+    (icon ? `<img src="${iconUrl(icon)}" alt="" class="${icon.endsWith(".png") && !icon.startsWith("icons/") ? "px" : ""}" ` +
+            `referrerpolicy="no-referrer">` : "") + `</span>`;
+}
+// Bulbagarden sometimes fails a request (its bot check): try the icon once more a few seconds later, often from
+// the image cache by then; if that fails too, the letters underneath show instead
+function iconFailed(img) {
+  if (!img.dataset.retried) {
+    const url = img.src;
+    img.dataset.retried = "1";
+    img.removeAttribute("src");
+    setTimeout(() => { if (img.isConnected) img.src = url; }, 3000);
+    return;
+  }
+  img.parentNode.classList.remove("icon");
+  img.remove();
 }
 
 function gvBar(crumbs) {
@@ -200,11 +213,14 @@ gameView.addEventListener("input", ev => {
   const words = fold(ev.target.value.trim()).split(/\s+/).filter(Boolean);
   gameView.querySelectorAll(".gv-pl").forEach(a => { a.hidden = !words.every(w => a.dataset.name.includes(w)); });
 });
-// art fallbacks, same order as the dex cards
+// failed images: game icons get a retry, Pokémon art walks the same fallback list as the dex cards
 gameView.addEventListener("error", ev => {
   const img = ev.target;
-  if (img.tagName !== "IMG") return;
-  const e = byId.get(img.closest(".gv-mon").dataset.id);
+  if (img.tagName !== "IMG" || !img.getAttribute("src")) return;
+  if (img.closest(".gv-abbr")) { iconFailed(img); return; }
+  const mon = img.closest(".gv-mon");
+  if (!mon) return;
+  const e = byId.get(mon.dataset.id);
   const i = +img.dataset.i + 1, list = e.srcs[mode];
   if (i < list.length) { img.dataset.i = i; img.src = list[i]; }
 }, true);

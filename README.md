@@ -67,6 +67,8 @@ Open them from **☰ → Games**, or from **"Open … map →"** under any game 
 | `tools/check_pokemondb.py` | Accuracy check: compares the location data with pokemondb.net |
 | `tools/fetch_locations.py` | Builds `locations/<game>.js` (places → Pokémon per game) from pokemondb's location pages + the dex finds |
 | `tools/check_locations.py` | Coverage check: every Pokémon the dex says is catchable in a game appears in one of its places |
+| `tools/test_imgbb.py` | Measures how imgbb (shiny art) copes with 4–100 requests at once |
+| `sw.js` | Image cache: keeps artwork on the device after its first download (GitHub Pages only) |
 
 ```bash
 python tools/fetch_info.py       # refresh the Pokédex data (downloaded pages are cached in tools/cache/)

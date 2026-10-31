@@ -7,7 +7,9 @@ body.in-games header .controls > :not(.menu):not(.shiny-btn) { display: none !im
 /* on the game pages the header is just the title, centred and larger, with ✨ and ☰ on the right */
 body.in-games header > .wrap { position: relative; }
 body.in-games header .top { justify-content: center; padding: 16px 0 14px; }
-body.in-games h1 { font-size: 26px; }
+body.in-games h1 { font-size: 26px; cursor: pointer; transition: opacity .15s ease; }
+body.in-games h1:hover { opacity: .8; }
+body.in-games h1:focus-visible { outline: 2px solid var(--accent-hi); outline-offset: 4px; border-radius: 4px; }
 body.in-games header .controls { position: absolute; top: 50%; right: max(var(--gutter), env(safe-area-inset-right));
                                  transform: translateY(-50%); padding: 0; }
 @media (max-width: 700px) {

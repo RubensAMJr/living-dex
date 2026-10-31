@@ -165,6 +165,9 @@ async function renderGame(id, placeSlug, pick) {
 }
 
 let inGames = false;
+const pageTitle = document.getElementById("title");
+pageTitle.addEventListener("click", () => { if (inGames) location.hash = ""; });
+pageTitle.addEventListener("keydown", ev => { if (inGames && (ev.key === "Enter" || ev.key === " ")) { ev.preventDefault(); location.hash = ""; } });
 function route(keepScroll = false) {
   const m = location.hash.match(/^#(games|game\/([a-z0-9-]+)(?:\/([a-z0-9-]+))?)(?:\?p=([^&]+))?$/);
   const on = !!m;
@@ -172,6 +175,9 @@ function route(keepScroll = false) {
   document.body.classList.toggle("in-games", on);
   gameView.hidden = !on;
   header.classList.remove("tucked");
+  // on the game pages the title is a way back to the dex
+  if (on) { pageTitle.setAttribute("role", "link"); pageTitle.tabIndex = 0; pageTitle.title = "Back to the dex"; }
+  else { pageTitle.removeAttribute("role"); pageTitle.removeAttribute("tabindex"); pageTitle.removeAttribute("title"); }
   if (!on) {
     gameView.innerHTML = "";
     if (inGames) { inGames = false; requestAnimationFrame(() => window.scrollTo(0, gv.dexY)); }

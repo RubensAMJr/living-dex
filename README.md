@@ -106,5 +106,14 @@ All images are linked from those sites at view time. None are stored in this rep
 - [**Serebii.net**](https://www.serebii.net): locations for Omega Ruby/Alpha Sapphire, Brilliant Diamond/Shining Pearl, Legends: Arceus, Scarlet/Violet + DLC and Legends: Z-A. Also the colour palette 🎨.
 - [**Pokémon Database (pokemondb.net)**](https://pokemondb.net): extra locations (White Forest, swarms, fossils, in-game trades), the accuracy check, and the place-by-place encounter tables behind the game pages.
 
+### 💙 Thank you
+This checklist only exists because of the people who build and share these resources for free:
+- [**Bulbapedia**](https://bulbapedia.bulbagarden.net) and the [**Bulbagarden Archives**](https://archives.bulbagarden.net): for the artwork of every Pokémon and form, and decades of carefully kept Pokémon knowledge.
+- [**Serebii.net**](https://www.serebii.net): for the most complete location data of the newest games, the backup artwork, and the look this page borrows.
+- [**Pokémon Database (pokemondb.net)**](https://pokemondb.net): for the place-by-place encounter tables behind the game pages and a second opinion on every location.
+- [**PokéAPI**](https://pokeapi.co): for the open data on types, stats, abilities, evolutions and encounters.
+- [**imgbb**](https://imgbb.com): for hosting the shiny artwork.
+- **sneasvile**, the artist behind the [shiny artwork gallery](https://tonofdirt726.imgbb.com/albums): for drawing every shiny in the official art style. The shiny dex wouldn't look like this without you. ✨
+
 ### ⚖️ Disclaimer
 Pokémon and all related names and images are © Nintendo, Creatures Inc. and GAME FREAK Inc. This is a free, unofficial fan project, not affiliated with or endorsed by them.

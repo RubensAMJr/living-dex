@@ -574,7 +574,18 @@
   body.in-games #main, body.in-games #empty, body.in-games footer,
   body.in-games header .gens, body.in-games header .progress,
   body.in-games header .controls > :not(.menu):not(.shiny-btn) { display: none !important; }
-  body.in-games header .controls { justify-content: flex-end; }
+  /* on the game pages the header is just the title, centred and larger, with ✨ and ☰ on the right */
+  body.in-games header > .wrap { position: relative; }
+  body.in-games header .top { justify-content: center; padding: 16px 0 14px; }
+  body.in-games h1 { font-size: 26px; }
+  body.in-games header .controls { position: absolute; top: 50%; right: max(var(--gutter), env(safe-area-inset-right));
+                                   transform: translateY(-50%); padding: 0; }
+  @media (max-width: 700px) {
+    /* phones: ✨ on the left and ☰ on the right, so the title can sit in the middle */
+    body.in-games header > .wrap { grid-template-columns: auto minmax(0, 1fr) auto; grid-template-areas: "shiny title menu"; }
+    body.in-games header .top { padding: 0; }
+    body.in-games h1 { justify-self: center; font-size: 20px; }
+  }
   .gv-bar { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 14px; font-size: 12px; }
   .gv-back { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 999px; background: var(--panel-hi);
              color: var(--text); text-decoration: none; font-weight: bold; }

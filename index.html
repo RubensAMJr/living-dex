@@ -1221,6 +1221,7 @@ function applyMode(all = false) {
   applyFilters();
   if (openInfo) openInfo.tile.classList.toggle("t-shiny", shiny);
   updateShinyNote();
+  refreshGames();
 }
 // the note about slow shiny art: shiny mode only, and gone for good once closed with ×
 const SHINY_NOTE_KEY = "living-dex-shiny-note-hidden";
@@ -2189,7 +2190,7 @@ async function renderGame(id, placeSlug, pick) {
 }
 
 let inGames = false;
-function route() {
+function route(keepScroll = false) {
   const m = location.hash.match(/^#(games|game\/([a-z0-9-]+)(?:\/([a-z0-9-]+))?)(?:\?p=([^&]+))?$/);
   const on = !!m;
   if (on && !inGames) { gv.dexY = window.scrollY; if (openInfo) closeInfo(false); setSelecting(false); }
@@ -2203,11 +2204,14 @@ function route() {
   }
   inGames = true;
   gameView.style.setProperty("--hh", `${header.offsetHeight}px`);
-  if (m[1] === "games") renderPicker();
-  else renderGame(m[2], m[3] || "", m[4] ? decodeURIComponent(m[4]) : "");
-  window.scrollTo(0, 0);
+  const y = window.scrollY;
+  const done = m[1] === "games" ? Promise.resolve(renderPicker())
+                                : renderGame(m[2], m[3] || "", m[4] ? decodeURIComponent(m[4]) : "");
+  if (keepScroll) done.then(() => window.scrollTo(0, y)); else window.scrollTo(0, 0);
 }
-window.addEventListener("hashchange", route);
+window.addEventListener("hashchange", () => route());
+// the ✨ switch on a game page: redraw it for the other dex (art, caught marks, missing counts), same scroll
+function refreshGames() { if (inGames) route(true); }
 document.getElementById("gamesBtn").addEventListener("click", () => { menu.open = false; location.hash = "#games"; });
 
 gameView.addEventListener("click", ev => {

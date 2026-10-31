@@ -242,6 +242,14 @@
     background: var(--accent); border: 1px solid var(--edge); border-radius: 3px;
     padding: 7px 12px; margin-bottom: 10px; font-weight: bold;
   }
+  /* shiny mode only, until dismissed: why some shiny art can be slow */
+  .shiny-note { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; padding: 7px 8px 7px 12px; border-radius: 6px;
+                background: rgba(255,213,74,.14); border: 1px solid rgba(255,213,74,.55); color: #ffe9a8; font-size: 12px; line-height: 1.4; }
+  .shiny-note[hidden] { display: none; }
+  .shiny-note span { flex: 1; }
+  .shiny-note button { flex: none; width: 24px; height: 24px; display: grid; place-items: center; padding: 0; border: 0; border-radius: 50%;
+                       background: transparent; color: #ffe9a8; font-size: 18px; line-height: 1; cursor: pointer; }
+  .shiny-note button:hover { background: rgba(255,213,74,.25); color: #fff; }
   .sec-head h2 { margin: 0; font-size: 14px; }
   .sec-head h2 small { font-weight: normal; color: var(--accent-soft); margin-left: 6px; font-size: 12px; }
   .sec-head .count { font-size: 12px; white-space: nowrap; }
@@ -884,7 +892,9 @@ for (const g of GROUPS) {
   html += `<section data-group="${g.key}"><div class="sec-head"><h2>${esc(g.title)}<small>${esc(g.sub)}</small></h2><span class="count"></span></div>` +
           `<div class="grid">${entries.filter(e => e.group === g).map(cardHtml).join("")}</div></section>`;
 }
-main.innerHTML = html;
+main.innerHTML = `<div class="shiny-note" id="shinyNote" role="note" hidden><span>✨ Shiny artwork is hosted on imgbb, so some images ` +
+  `can take a while to load the first time because of imgbb's limits. Cards show a backup image meanwhile.</span>` +
+  `<button type="button" aria-label="Hide this note" title="Hide this note">×</button></div>` + html;
 for (const sec of main.querySelectorAll("section")) {
   const g = groupByKey.get(sec.dataset.group);
   sections.set(g.key, { g, sec, count: sec.querySelector(".count") });
@@ -1190,7 +1200,20 @@ function applyMode(all = false) {
   updateCounts();
   applyFilters();
   if (openInfo) openInfo.tile.classList.toggle("t-shiny", shiny);
+  updateShinyNote();
 }
+// the note about slow shiny art: shiny mode only, and gone for good once closed with ×
+const SHINY_NOTE_KEY = "living-dex-shiny-note-hidden";
+const shinyNote = document.getElementById("shinyNote");
+function updateShinyNote() {
+  let closed = false;
+  try { closed = localStorage.getItem(SHINY_NOTE_KEY) === "1"; } catch (e) {}
+  shinyNote.hidden = mode !== "shiny" || closed;
+}
+shinyNote.querySelector("button").addEventListener("click", () => {
+  try { localStorage.setItem(SHINY_NOTE_KEY, "1"); } catch (e) {}
+  shinyNote.hidden = true;
+});
 
 // ---------- shiny transition ----------
 // Snappy: the dex crossfades at once (both artworks are already loaded), a light sweep crosses

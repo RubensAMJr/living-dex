@@ -2,7 +2,6 @@
 .git
 .gitignore
 .assetsignore
-.nojekyll
 wrangler.jsonc
 README.md
 src/

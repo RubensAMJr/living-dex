@@ -124,6 +124,27 @@ python tools/copy_local.py       # update the local test copy
 
 To test locally over http (with the image cache), serve the folder: `python -m http.server` and open http://localhost:8000.
 
+### ✅ Tests
+Two suites, no installs needed (they're not published, see `.assetsignore`):
+
+- **Data and files** (`tests/test_data.py`, about 0.1 s):
+  - the Pokémon list and the Pokédex data match
+  - every game's routes list exactly the Pokémon it can catch
+  - known cases stay right (Camerupt in Ruby by evolving, no event-only finds)
+  - every file the page loads exists, and none is excluded from publishing
+
+  ```bash
+  python -m unittest discover -s tests -v
+  ```
+- **The app in a browser** (`tests/index.html`, about 25 s): with `python -m http.server` running, open http://localhost:8000/tests/. It loads the real page in a frame and clicks through:
+  - marking, search and filters
+  - the Pokédex tile, selection mode, OT marks
+  - the ✨ switch, including its first-time animation, and the shiny note
+  - the game picker and game pages: highlights, marking, the shiny redraw, title and back button
+  - the phone header
+
+  Your own marks and settings are saved before the run and restored afterwards.
+
 **Publishing:** the site runs on Cloudflare Workers (static assets, no server code). Cloudflare deploys it automatically on every push to `main`.
 
 ---

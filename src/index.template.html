@@ -242,10 +242,14 @@
     background: var(--accent); border: 1px solid var(--edge); border-radius: 3px;
     padding: 7px 12px; margin-bottom: 10px; font-weight: bold;
   }
-  /* shiny mode only, until dismissed: why some shiny art can be slow */
-  .shiny-note { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; padding: 7px 8px 7px 12px; border-radius: 6px;
-                background: rgba(255,213,74,.14); border: 1px solid rgba(255,213,74,.55); color: #ffe9a8; font-size: 12px; line-height: 1.4; }
-  .shiny-note[hidden] { display: none; }
+  /* shiny mode only, until dismissed: why some shiny art can be slow (floats at the bottom of the screen) */
+  .shiny-note { position: fixed; z-index: 30; left: 50%; transform: translateX(-50%);
+                bottom: calc(14px + env(safe-area-inset-bottom)); width: max-content; max-width: min(620px, calc(100% - 2 * var(--gutter)));
+                display: flex; align-items: center; gap: 10px; padding: 8px 8px 8px 14px; border-radius: 8px;
+                background: #3b3415; border: 1px solid #ffd54a; color: #ffe9a8; font-size: 12px; line-height: 1.4;
+                box-shadow: 0 6px 22px rgba(0,0,0,.55); animation: note-in .35s ease-out; }
+  @keyframes note-in { from { opacity: 0; transform: translate(-50%, 12px); } }
+  .shiny-note[hidden], body.in-games .shiny-note, body:has(.selbar:not([hidden])) .shiny-note { display: none; }
   .shiny-note span { flex: 1; }
   .shiny-note button { flex: none; width: 24px; height: 24px; display: grid; place-items: center; padding: 0; border: 0; border-radius: 50%;
                        background: transparent; color: #ffe9a8; font-size: 18px; line-height: 1; cursor: pointer; }
@@ -721,6 +725,9 @@
 <main class="wrap" id="main"></main>
 <div class="empty wrap" id="empty">No Pokémon match these filters.</div>
 <div class="wrap gv" id="gameView" hidden></div>
+<div class="shiny-note" id="shinyNote" role="note" hidden><span>✨ Shiny artwork is hosted on imgbb, so some images can take a while
+  to load the first time because of imgbb's limits. Cards show a backup image meanwhile.</span>
+  <button type="button" aria-label="Hide this note" title="Hide this note">×</button></div>
 
 <footer>
   Tap or click a Pokémon to mark it caught or missing. Progress is saved in this browser automatically, separately for the regular and the shiny dex.<br>
@@ -892,9 +899,7 @@ for (const g of GROUPS) {
   html += `<section data-group="${g.key}"><div class="sec-head"><h2>${esc(g.title)}<small>${esc(g.sub)}</small></h2><span class="count"></span></div>` +
           `<div class="grid">${entries.filter(e => e.group === g).map(cardHtml).join("")}</div></section>`;
 }
-main.innerHTML = `<div class="shiny-note" id="shinyNote" role="note" hidden><span>✨ Shiny artwork is hosted on imgbb, so some images ` +
-  `can take a while to load the first time because of imgbb's limits. Cards show a backup image meanwhile.</span>` +
-  `<button type="button" aria-label="Hide this note" title="Hide this note">×</button></div>` + html;
+main.innerHTML = html;
 for (const sec of main.querySelectorAll("section")) {
   const g = groupByKey.get(sec.dataset.group);
   sections.set(g.key, { g, sec, count: sec.querySelector(".count") });

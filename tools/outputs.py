@@ -112,4 +112,6 @@ def write(root, info, abilities, regional):
         head + f"window.DEX_GAMES = {dump(GAMES)};\nwindow.DEX_INFO = {dump(core)};\nwindow.DEX_ABILITIES = {dump(abilities)};\n", encoding="utf-8")
     (root / "info-places.js").write_text(
         head + f"window.DEX_PLACES = {{s:{dump(strings)},d:{dump(places)}}};\n", encoding="utf-8")
+    # every find, untrimmed, for tools/fetch_locations.py (games without pokemondb location pages)
+    (root / "tools" / "cache" / "finds.json").write_text(dump({eid: v["g"] for eid, v in info.items() if v["g"]}), encoding="utf-8")
     return evo

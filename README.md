@@ -61,6 +61,7 @@ Open them from **☰ → Games**, or from **"Open … map →"** under any game 
 - Data loads only when needed: location details (≈600 KB) the first time you look at a game badge, and each game's places (≈30–200 KB) when you open that game.
 
 ### ⚡ Fast artwork
+- 🎯 **Only the art you see:** the dex you're viewing loads its art first. The other dex's art is fetched in the background, at low priority, only for the cards on screen once you stop scrolling, so switching stays instant without downloading hidden art for every card you scroll past.
 - 💾 **Image cache:** artwork is kept on your device after its first download, so the dex (and the shiny dex) shows up instantly on later visits, with no requests to the image sites. It works on the website, not when opening the page as a local file.
 - 🚀 **Shiny art loads in parallel** and only slows down if imgbb actually reports it's busy.
 - 🔄 **No blank cards:** if a shiny image takes too long, the card shows the backup art and switches to the proper one as soon as it arrives.
@@ -139,9 +140,12 @@ Two suites, no installs needed (they're not published, see `.assetsignore`):
 - **The app in a browser** (`tests/index.html`, about 25 s): with `python -m http.server` running, open http://localhost:8000/tests/. It loads the real page in a frame and clicks through:
   - marking, search and filters
   - the Pokédex tile, selection mode, OT marks
-  - the ✨ switch, including its first-time animation, and the shiny note
+  - the ✨ switch: its first-time animation, and that a slow frame doesn't skip it; the shiny note
+  - which artwork loads when (shown dex first, the other only for cards on screen) and the page's size
   - the game picker and game pages: highlights, marking, the shiny redraw, title and back button
   - the phone header
+
+  The animation and artwork checks need the page to be drawn: keep the test tab visible, or they report "not checked".
 
   Your own marks and settings are saved before the run and restored afterwards.
 

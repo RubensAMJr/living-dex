@@ -5,6 +5,7 @@ const shinyBtn = document.getElementById("shinyBtn");
 const onScreen = new Set();
 const io = new IntersectionObserver(list => {
   for (const it of list) { if (it.isIntersecting) onScreen.add(it.target); else onScreen.delete(it.target); }
+  loadOtherArtSoon();
 }, { rootMargin: "300px 0px" });
 entries.forEach(e => io.observe(e.el));
 const themedRoots = [document.querySelector("header"), ...document.querySelectorAll(".sec-head"),
@@ -39,6 +40,8 @@ function applyMode(all = false) {
   document.title = shiny ? "Shiny Living Dex" : "Living Dex Checklist";
   document.getElementById("resetBtn").textContent = shiny ? "Clear shiny dex (nothing caught)" : "Clear regular dex (nothing caught)";
   caught = sets[mode];
+  loadShownArt();
+  loadOtherArtSoon();
   entries.forEach(paintCard);
   updateCounts();
   applyFilters();
@@ -122,13 +125,19 @@ function playTransition(toShiny, swap) {
     burst(fx, r.left + r.width / 2, r.top + r.height / 2, phone ? 6 : 8, phone ? 50 : 70, 12, 20);
   }
   document.body.appendChild(fx);
-  // Effect first, dex second. The first switch is slow to draw (all that artwork shows for the first time); when
-  // the dex changed in the same frame the effect was added, that heavy frame swallowed the effect. So the dex only
-  // changes once the effect's animations are running (they keep going while the new artwork is drawn), and the
-  // layer goes when they have finished.
+  // Effect first, so the dex changes underneath it instead of popping in. The frame where the dex changes can be
+  // slow to draw (the first switch draws all that artwork for the first time), and the effect's animations count
+  // time straight through it: on a slow machine they had already ended by the time the frame showed. So they are
+  // held while the dex changes and carry on, from where they were, once that frame is on screen.
   const anims = fx.getAnimations({ subtree: true });
   let swapped = false, done = false;
-  const change = () => { if (!swapped) { swapped = true; swap(); } };
+  const change = () => {
+    if (swapped) return;
+    swapped = true;
+    anims.forEach(a => a.pause());
+    swap();
+    requestAnimationFrame(() => requestAnimationFrame(() => anims.forEach(a => { if (a.playState === "paused") a.play(); })));
+  };
   const finish = () => { if (done) return; done = true; change(); fx.remove(); animating = false; };
   Promise.all(anims.map(a => a.ready)).then(change, change);
   // backstop for hidden tabs only: right after loading, a busy page can take a few hundred ms to start the effect,

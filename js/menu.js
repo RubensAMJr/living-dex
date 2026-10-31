@@ -10,6 +10,7 @@ function applySettings() {
   optPaintFx.checked = settings.paintFx;
   document.body.classList.toggle("no-paint", !settings.paintFx);
   document.getElementById("optShowOt").checked = settings.showOt;
+  if (settings.showOt) addOtButtons();
   document.body.classList.toggle("show-ot", settings.showOt);
   // the Not OT filter disappears with the OT marks, so fall back to All
   if (!settings.showOt && view.status === "notot") {

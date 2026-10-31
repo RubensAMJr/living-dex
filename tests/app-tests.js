@@ -33,9 +33,10 @@ const q = sel => W.document.querySelector(sel);
 const qa = sel => [...W.document.querySelectorAll(sel)];
 
 const APP_KEYS = key => key.startsWith("living-dex");
-async function load(hash = "", width = "100%") {
+async function load(hash = "", width = "100%", stored = {}) {
   frame.style.width = width;
   for (const key of Object.keys(localStorage)) if (APP_KEYS(key)) localStorage.removeItem(key);
+  for (const [key, value] of Object.entries(stored)) localStorage.setItem(key, value);
   const loaded = new Promise(r => frame.addEventListener("load", r, { once: true }));
   frame.src = `../index.html?test=${Date.now()}${hash}`;
   await loaded;
@@ -46,6 +47,8 @@ async function load(hash = "", width = "100%") {
   if (hash) await until(() => $("inGames"), "a game page");
 }
 const card = id => $(`byId.get(${JSON.stringify(id)})`);
+// animations and scroll-based loading only run while the page is drawn (not in a hidden window or background tab)
+const isDrawn = () => Promise.race([new Promise(r => W.requestAnimationFrame(() => r(true))), wait(300).then(() => false)]);
 async function click(el) { el.click(); await wait(60); }
 
 // ---------------------------------------------------------------- the dex
@@ -132,11 +135,10 @@ test("✨ switch: the first switch shows its whole animation", async () => {
   };
   W.applyMode = function (...args) {
     const fx = W.document.querySelector(".fx");
-    changed.push(fx ? fx.getAnimations({ subtree: true }).map(a => a.startTime !== null) : null);
+    changed.push(fx ? fx.getAnimations({ subtree: true }).map(a => a.playState) : null);
     return applyMode.apply(this, args);
   };
-  // animations only run while the page is drawn (not in a hidden window or a background tab)
-  const drawn = await Promise.race([new Promise(r => W.requestAnimationFrame(() => r(true))), wait(300).then(() => false)]);
+  const drawn = await isDrawn();
   try {
     await click(q("#shinyBtn"));
     assert(q(".fx"), "effect layer added");
@@ -144,8 +146,9 @@ test("✨ switch: the first switch shows its whole animation", async () => {
     eq(q("#title").textContent, "Shiny Living Dex", "title");
     await until(() => removed.length, "the effect layer to be removed", 6000);
     if (drawn) {
-      assert(changed[0] && changed[0].length > 0 && changed[0].every(Boolean),
-             "the effect was already running when the dex changed");
+      // the effect started first and is held (paused) while the dex changes underneath it
+      assert(changed[0] && changed[0].length > 0 && changed[0].every(s => s === "paused"),
+             `the effect was on screen and held when the dex changed (got ${changed[0]})`);
       assert(removed[0].length > 0 && removed[0].every(s => s === "finished"),
              `all animations finished before removal (got ${removed[0].join(",")})`);
     }
@@ -154,6 +157,55 @@ test("✨ switch: the first switch shows its whole animation", async () => {
   await click(q("#shinyBtn"));
   await until(() => $("mode") === "normal", "back to the regular dex");
   if (!drawn) return "animation order not checked: the page isn't being drawn (window hidden?)";
+});
+
+test("✨ switch: a slow frame doesn't skip the effect", async () => {
+  await load();
+  if (!await isDrawn()) return "not checked: the page isn't being drawn (window hidden?)";
+  // make the dex change take 700 ms, like a first switch on a slow machine
+  const applyMode = W.applyMode;
+  W.applyMode = function (...args) { const end = W.performance.now() + 700; while (W.performance.now() < end); return applyMode.apply(this, args); };
+  let flashAfter = null;
+  try {
+    await click(q("#shinyBtn"));
+    await until(() => $("mode") === "shiny", "the shiny dex");
+    // first frames after the slow one: how far is the 0.5 s flash?
+    await new Promise(r => W.requestAnimationFrame(() => W.requestAnimationFrame(() => W.requestAnimationFrame(r))));
+    const flash = q(".fx .flash");
+    flashAfter = flash ? flash.getAnimations()[0].currentTime : null;
+  } finally { W.applyMode = applyMode; }
+  assert(flashAfter !== null && flashAfter < 400, `the flash carried on after the slow frame (at ${Math.round(flashAfter)} ms of 500)`);
+  await until(() => !$("animating"), "the switch to settle");
+});
+
+test("artwork: shown dex first; the other dex only for cards on screen, low priority", async () => {
+  await load();
+  if (!await isDrawn()) return "not checked: the page isn't being drawn (window hidden?)";
+  await until(() => qa(".card .v.n img[src]").length > 10, "the regular art to start loading");
+  await wait(800);   // scrolling settled: the other dex's art for the cards on screen
+  const onScreen = new Set($("[...onScreen]"));
+  const started = kind => qa(`.card .v.${kind} img`).filter(i => i.getAttribute("src"));
+  const shiny = started("s"), regular = started("n");
+  assert(shiny.length > 0, "shiny art preloaded for the cards on screen");
+  assert(shiny.every(i => onScreen.has(i.closest(".card"))), "no shiny art for cards off screen");
+  assert(shiny.every(i => i.fetchPriority === "low"), "shiny art preloaded at low priority");
+  assert(regular.length > shiny.length, `regular art for every card near the screen (${regular.length} vs ${shiny.length})`);
+  // switching: the newly shown art of every card near the screen is asked for right away
+  $('mode = "shiny"; applyMode()');
+  const near = $("[...nearScreen].map(e => e.el)");
+  assert(near.length > 0 && near.every(el => el.querySelector(".v.s img").getAttribute("src")), "shiny art for every card near the screen");
+});
+
+test("page size: OT buttons only once OT marks are on", async () => {
+  await load();
+  eq(qa(".ot-btn").length, 0, "no OT buttons with OT marks off");
+  const n = W.document.getElementsByTagName("*").length;
+  assert(n < 11200, `page elements: ${n} (budget 11,200)`);
+  await click(q("#optShowOt"));
+  eq(qa(".ot-btn").length, 1082, "OT buttons added when turned on");
+  assert(card("1").el.querySelector(".ot-btn").nextElementSibling.classList.contains("tick"), "in their old place, before the tick");
+  await load("", "100%", { "living-dex-checker-settings": JSON.stringify({ showOt: true }) });
+  eq(qa(".ot-btn").length, 1082, "added at load when OT marks were left on");
 });
 
 test("shiny note: only in the shiny dex, × hides it for good", async () => {

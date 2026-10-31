@@ -17,9 +17,16 @@ function cardHtml(e) {
     `<div class="art"><div class="v n" data-ph="#${e.dex}">${img("normal", e.srcs.normal[0], ` data-srcset="${esc(e.srcset)}"`, label)}</div>` +
     `<div class="v s" data-ph="#${e.dex}">${img("shiny", e.srcs.shiny[0], "", `Shiny ${label}`)}</div></div>` +
     (DEX_INFO[e.id] ? `<button type="button" class="info-btn" aria-label="More about ${label}" title="More about ${label}"></button>` : "") +
-    `<button type="button" class="ot-btn" aria-label="Original trainer mark for ${label}" title="OT: caught by you (click to toggle)"></button>` +
     `<span class="tick"></span><div class="num">#${pad(e.dex)}</div><div class="name">${label}</div>` +
     (e.note ? `<div class="form">${esc(e.note)}</div>` : "") + `</div>`;
+}
+// The OT cap buttons are added the first time OT marks are on (menu.js); they're off by default, and leaving the
+// buttons out until then keeps 1,082 elements off the page
+const otBtnHtml = e =>
+  `<button type="button" class="ot-btn" aria-label="Original trainer mark for ${esc(e.label)}" title="OT: caught by you (click to toggle)"></button>`;
+function addOtButtons() {
+  if (main.querySelector(".ot-btn")) return;
+  for (const e of entries) e.el.querySelector(".tick").insertAdjacentHTML("beforebegin", otBtnHtml(e));
 }
 
 const sections = new Map();
@@ -97,20 +104,38 @@ if (navigator.serviceWorker) navigator.serviceWorker.addEventListener("message",
   if (ev.data && ev.data.type === "art-ready") useLateArt(ev.data.url);
 });
 
-// Cards start loading their two artworks when they come within about a screen of view:
-// a fast first paint (no 2,000+ image requests set up at once) and less data on phones
+// Artwork loading. Each card holds both artworks stacked (switching dex is a crossfade, nothing to wait for), but
+// only the shown dex's art is fetched as cards come within about a screen of view. The other dex's art follows at
+// low priority for the cards on screen once scrolling settles, so a switch is still instant there without
+// downloading the hidden art of every card scrolled past (a shiny image is ~8x the size of a regular one).
+const shownKind = () => (mode === "shiny" ? "shiny" : "normal");
+function loadArt(e, kind, low = false) {
+  const img = e.el.querySelector(kind === "shiny" ? ".v.s img" : ".v.n img");
+  if (!img || !img.dataset.src) return;      // already loading or loaded
+  if (low) img.fetchPriority = "low";
+  if (img.dataset.srcset) img.srcset = img.dataset.srcset;
+  setSrc(img, img.dataset.src);
+  img.removeAttribute("data-src");
+}
+const nearScreen = new Set();                 // entries within about a screen of view
 const artIO = new IntersectionObserver(list => {
   for (const it of list) {
-    if (!it.isIntersecting) continue;
-    artIO.unobserve(it.target);
-    for (const img of it.target.querySelectorAll("img[data-src]")) {
-      if (img.dataset.srcset) img.srcset = img.dataset.srcset;
-      setSrc(img, img.dataset.src);
-      img.removeAttribute("data-src");
-    }
+    const e = byId.get(it.target.dataset.id);
+    if (it.isIntersecting) { nearScreen.add(e); loadArt(e, shownKind()); } else nearScreen.delete(e);
   }
 }, { rootMargin: "1000px 0px" });
 for (const e of entries) artIO.observe(e.el);
+// the other dex's art for the cards on screen (onScreen, shiny.js), once scrolling has stopped for a moment
+let otherArtTimer = 0;
+function loadOtherArtSoon() {
+  clearTimeout(otherArtTimer);
+  otherArtTimer = setTimeout(() => {
+    const other = shownKind() === "shiny" ? "normal" : "shiny";
+    for (const el of onScreen) loadArt(byId.get(el.dataset.id), other, true);
+  }, 300);
+}
+// after a switch: the newly shown art of every card near the screen, right away
+function loadShownArt() { for (const e of nearScreen) loadArt(e, shownKind()); }
 
 // Each artwork walks its own source list until one loads, then is decoded ahead of time
 // so switching between the regular and shiny dex never waits on an image

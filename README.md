@@ -99,8 +99,9 @@ python tools/build.py            # rebuild index.html
 - **Shiny artwork** in the official art style from [**sneasvile's imgbb gallery**](https://tonofdirt726.imgbb.com/albums). Thank you for making these! 💙
 - **Shiny fallback:** Pokémon HOME renders hosted on Bulbapedia.
 - **Game icons** (DS, 3DS, Switch and 3DS Virtual Console home-menu icons) from the [Bulbagarden Archives' game icons](https://archives.bulbagarden.net/wiki/Category:Game_icons).
+- **GBA game icons** (Ruby, Sapphire, Emerald, FireRed, LeafGreen; those games never had official ones): custom HD icons by **Viator_** on [SteamGridDB](https://www.steamgriddb.com/icon/40864), based on EuroBeat's. These five are the only images stored in this repository (`icons/`).
 
-All images are linked from those sites at view time. None are stored in this repository; your browser keeps its own copy for speed.
+All other images are linked from those sites at view time; your browser keeps its own copy for speed.
 
 ### 📚 Data
 - [**PokéAPI**](https://pokeapi.co): types, base stats, abilities, evolutions, and encounter data for Red/Blue through Sword/Shield.
@@ -115,6 +116,7 @@ This checklist only exists because of the people who build and share these resou
 - [**PokéAPI**](https://pokeapi.co): for the open data on types, stats, abilities, evolutions and encounters.
 - [**imgbb**](https://imgbb.com): for hosting the shiny artwork.
 - **sneasvile**, the artist behind the [shiny artwork gallery](https://tonofdirt726.imgbb.com/albums): for drawing every shiny in the official art style. The shiny dex wouldn't look like this without you. ✨
+- **Viator_** and **EuroBeat** on [SteamGridDB](https://www.steamgriddb.com): for the GBA game icons.
 
 ### ⚖️ Disclaimer
 Pokémon and all related names and images are © Nintendo, Creatures Inc. and GAME FREAK Inc. This is a free, unofficial fan project, not affiliated with or endorsed by them.

@@ -167,7 +167,7 @@ All other images are linked from those sites at view time; your browser keeps it
 - [**Pokémon Database (pokemondb.net)**](https://pokemondb.net): extra locations (White Forest, swarms, fossils, in-game trades), the accuracy check, and the place-by-place encounter tables behind the game pages.
 
 ### 💙 Thank you
-This checklist only exists because of the people who build and share these resources for free:
+Thank you to:
 - [**Bulbapedia**](https://bulbapedia.bulbagarden.net) and the [**Bulbagarden Archives**](https://archives.bulbagarden.net): for the artwork of every Pokémon and form, and decades of carefully kept Pokémon knowledge.
 - [**Serebii.net**](https://www.serebii.net): for the most complete location data of the newest games, the backup artwork, and the look this page borrows.
 - [**Pokémon Database (pokemondb.net)**](https://pokemondb.net): for the place-by-place encounter tables behind the game pages and a second opinion on every location.

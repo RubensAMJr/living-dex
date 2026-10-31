@@ -1,0 +1,9 @@
+// Cloudflare Workers: this site is only static files, served as they are (no server code).
+// Deployed by Cloudflare on every push to main; .assetsignore keeps the source and tools out of the published site.
+{
+  "name": "living-dex",
+  "compatibility_date": "2026-10-01",
+  "assets": {
+    "directory": "./"
+  }
+}

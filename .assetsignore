@@ -1,0 +1,9 @@
+# Not part of the published site (Cloudflare Workers static assets)
+.git
+.gitignore
+.assetsignore
+.nojekyll
+wrangler.jsonc
+README.md
+src/
+tools/

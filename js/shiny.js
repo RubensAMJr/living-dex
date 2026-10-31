@@ -120,7 +120,13 @@ function playTransition(toShiny, swap) {
     burst(fx, r.left + r.width / 2, r.top + r.height / 2, phone ? 6 : 8, phone ? 50 : 70, 12, 20);
   }
   document.body.appendChild(fx);
-  setTimeout(() => { fx.remove(); animating = false; }, 900);
+  // The animations last up to ~0.85 s from their first frame on screen. Count from that frame, not from now: the
+  // first switch is slow to draw (all the other artwork shows for the first time), and a timer started here
+  // removed the layer before it was ever painted.
+  let done = false;
+  const finish = () => { if (done) return; done = true; fx.remove(); animating = false; };
+  requestAnimationFrame(() => requestAnimationFrame(() => setTimeout(finish, 900)));
+  setTimeout(finish, 4000); // backstop: hidden tabs don't draw frames
 }
 
 shinyBtn.addEventListener("click", () => {

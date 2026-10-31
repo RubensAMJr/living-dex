@@ -65,8 +65,10 @@ shinyNote.querySelector("button").addEventListener("click", () => {
 let animating = false;
 const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-// Draw the ✨ (with its glow) into an image once, ahead of the first click
-function prepareSpark() {
+// Draw the ✨ (with its glow) into an image once, ahead of the first click (or at the click, if that comes first)
+let sparkUrl = "";
+function prepareSpark(now = false) {
+  if (sparkUrl) return;
   const size = 128;
   const c = document.createElement("canvas");
   c.width = c.height = size;
@@ -77,12 +79,12 @@ function prepareSpark() {
   g.shadowColor = "rgba(255,230,140,.95)";
   g.shadowBlur = 16;
   g.fillText("✨", size / 2, size / 2 + size * 0.04);
-  const url = c.toDataURL("image/png");
+  const url = sparkUrl = c.toDataURL("image/png");
+  const use = () => document.documentElement.style.setProperty("--spark", `url("${url}")`);
+  if (now) { use(); return; }
   const warm = new Image();
   warm.src = url;
-  (warm.decode ? warm.decode() : Promise.resolve()).catch(() => {}).then(() => {
-    document.documentElement.style.setProperty("--spark", `url("${url}")`);
-  });
+  (warm.decode ? warm.decode() : Promise.resolve()).catch(() => {}).then(use);
 }
 
 function burst(fx, x, y, count, reach, sizeMin, sizeMax) {
@@ -112,6 +114,7 @@ function playTransition(toShiny, swap) {
   fx.style.setProperty("--glow", toShiny ? "79,180,255" : "121,176,82");
   fx.innerHTML = '<div class="flash"></div><div class="sweep"></div>';
   if (toShiny) {
+    prepareSpark(true);  // clicked before the page got round to drawing the ✨: draw it now, or the sparks are blank
     const W = window.innerWidth, H = window.innerHeight;
     const phone = W < 600; // fewer, smaller sparks on small screens
     burst(fx, W / 2, H / 2, phone ? 14 : 22, Math.hypot(W, H) * 0.42, phone ? 14 : 18, phone ? 30 : 40);
@@ -128,7 +131,9 @@ function playTransition(toShiny, swap) {
   const change = () => { if (!swapped) { swapped = true; swap(); } };
   const finish = () => { if (done) return; done = true; change(); fx.remove(); animating = false; };
   Promise.all(anims.map(a => a.ready)).then(change, change);
-  setTimeout(change, 250);   // backstop: never keep the dex waiting long
+  // backstop for hidden tabs only: right after loading, a busy page can take a few hundred ms to start the effect,
+  // and changing the dex before that is exactly what swallowed it
+  setTimeout(change, 1500);
   Promise.all(anims.map(a => a.finished)).then(finish, finish);
   setTimeout(finish, 4000);  // backstop: hidden tabs don't draw frames
 }

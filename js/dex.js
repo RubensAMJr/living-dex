@@ -130,6 +130,9 @@ let otherArtTimer = 0;
 function loadOtherArtSoon() {
   clearTimeout(otherArtTimer);
   otherArtTimer = setTimeout(() => {
+    // not during the ✨ effect: on the website the image cache delivers all of it at once, and drawing it froze
+    // the screen for ~250 ms in the middle of the effect
+    if (animating || preparing) { loadOtherArtSoon(); return; }
     const other = shownKind() === "shiny" ? "normal" : "shiny";
     for (const el of onScreen) loadArt(byId.get(el.dataset.id), other, true);
   }, 300);

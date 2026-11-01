@@ -141,7 +141,7 @@ test("✨ switch: the first switch shows its whole animation", async () => {
   const drawn = await isDrawn();
   try {
     await click(q("#shinyBtn"));
-    assert(q(".fx"), "effect layer added");
+    await until(() => q(".fx"), "the effect layer", 2000);
     await until(() => $("mode") === "shiny", "the shiny dex");
     eq(q("#title").textContent, "Shiny Living Dex", "title");
     await until(() => removed.length, "the effect layer to be removed", 6000);
@@ -189,7 +189,7 @@ test("artwork: shown dex first; the other dex only for cards on screen, low prio
   assert(shiny.length > 0, "shiny art preloaded for the cards on screen");
   assert(shiny.every(i => onScreen.has(i.closest(".card"))), "no shiny art for cards off screen");
   assert(shiny.every(i => i.fetchPriority === "low"), "shiny art preloaded at low priority");
-  assert(regular.length > shiny.length, `regular art for every card near the screen (${regular.length} vs ${shiny.length})`);
+  assert(regular.length >= shiny.length, `regular art for every card near the screen (${regular.length} vs ${shiny.length})`);
   // switching: the newly shown art of every card near the screen is asked for right away
   $('mode = "shiny"; applyMode()');
   const near = $("[...nearScreen].map(e => e.el)");

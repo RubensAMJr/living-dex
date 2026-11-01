@@ -147,9 +147,28 @@ function playTransition(toShiny, swap) {
   setTimeout(finish, 4000);  // backstop: hidden tabs don't draw frames
 }
 
-shinyBtn.addEventListener("click", () => {
-  if (animating) return;
+// The art a switch reveals on screen, loaded and decoded before the effect starts (at most `wait` ms). On the
+// website the image cache hands over all of it at once; drawing ~60 new images in the middle of the effect
+// stalled it on slower machines, so the first switch after a load showed no effect at all.
+function artReady(kind, wait) {
+  const ready = [...onScreen].map(el => {
+    const e = byId.get(el.dataset.id);
+    loadArt(e, kind);
+    const img = el.querySelector(kind === "shiny" ? ".v.s img" : ".v.n img");
+    if (!img || !img.getAttribute("src")) return null;
+    const loaded = img.complete ? Promise.resolve()
+      : new Promise(r => { img.addEventListener("load", r, { once: true }); img.addEventListener("error", r, { once: true }); });
+    return loaded.then(() => (img.naturalWidth && img.decode ? img.decode() : null)).catch(() => {});
+  });
+  return Promise.race([Promise.all(ready), new Promise(r => setTimeout(r, wait))]);
+}
+
+let preparing = false;
+shinyBtn.addEventListener("click", async () => {
+  if (animating || preparing) return;
   const next = mode === "shiny" ? "normal" : "shiny";
+  preparing = true;
+  try { await artReady(next, 800); } finally { preparing = false; }
   playTransition(next === "shiny", () => {
     mode = next;
     applyMode();
